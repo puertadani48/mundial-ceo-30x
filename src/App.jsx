@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 /* ════════════════════════════════════════════════════════
-   POLLA DEL CEO · 30X · MUNDIAL 2026
+   MUNDIAL DEL CEO · 30X · MUNDIAL 2026
    Rediseño con estética broadcast deportivo
    Una propuesta de Daniel para Andrés Bilbao
 ═══════════════════════════════════════════════════════ */
@@ -72,12 +72,12 @@ const SEED_BOARD = [
   { name: "Laura C.",   company: "AgroLink",       stage: "MVP",       score: 175300, risk: "Alto",  div: 7 },
 ];
 
-const SYSTEM_FEEDBACK = `Eres Andrés Bilbao — cofundador de Rappi, CEO de 30X, caleño. Acabas de revisar las apuestas que un founder hizo en la Polla del CEO de 30X.
+const SYSTEM_FEEDBACK = `Eres Andrés Bilbao — cofundador de Rappi, CEO de 30X, caleño. Acabas de revisar las apuestas que un founder hizo en la MUNDIAL DEL CEO de 30X.
 
 Tu trabajo es darle feedback en TU VOZ:
 - Caleño natural: usa "venga", "parce", "de una", "bacano", "eso sí", "le metió" con moderación — una o dos expresiones, que suene natural
 - Directo, honesto. Si está apostando mal, lo dices.
-- Habla como inversionista: la polla es proxy de cómo invierte y decide
+- Habla como inversionista: el juego es proxy de cómo invierte y decide
 - 4 a 6 oraciones máximo
 - NO uses bullet points ni listas
 - Saltos de línea simples para respirar
@@ -97,7 +97,7 @@ Responde en español colombiano.`;
 /* ─── STORAGE ───────────────────────────────────────────── */
 function loadBoard() {
   try {
-    const r = localStorage.getItem("polla:board:v2");
+    const r = localStorage.getItem("mundial:board:v2");
     return r ? JSON.parse(r) : SEED_BOARD;
   } catch { return SEED_BOARD; }
 }
@@ -105,7 +105,7 @@ function submitToBoard(entry) {
   try {
     const cur = loadBoard();
     const next = [...cur, entry].sort((a, b) => b.score - a.score).slice(0, 50);
-    localStorage.setItem("polla:board:v2", JSON.stringify(next));
+    localStorage.setItem("mundial:board:v2", JSON.stringify(next));
     return next;
   } catch { return [entry, ...SEED_BOARD]; }
 }
@@ -196,7 +196,7 @@ function TopBar({ view }) {
         <div style={{ width: 1, height: 24, background: C.border }} />
         <div>
           <div style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: C.lime, textTransform: "uppercase" }}>FIFA World Cup 2026</div>
-          <div style={{ fontFamily: F.cond, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", color: C.mid }}>POLLA DEL CEO · BETA</div>
+          <div style={{ fontFamily: F.cond, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", color: C.mid }}>MUNDIAL DEL CEO · BETA</div>
         </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -303,7 +303,7 @@ function Intro({ onStart }) {
             SI NO SABES APOSTAR A 8 PARTIDOS — <span style={{ color: C.lime }}>¿CÓMO VAS A TOMAR 1.000 DECISIONES EN TU EMPRESA?</span>
           </h3>
           <p style={{ marginTop: 24, fontSize: 15, color: C.text, lineHeight: 1.7 }}>
-            Una polla del Mundial es el experimento más honesto que existe sobre cómo piensas. Te obliga a decidir con información incompleta, asumir riesgos, diversificar o concentrar, creer en una convicción cuando los números no la favorecen.
+            Un juego del Mundial es el experimento más honesto que existe sobre cómo piensas. Te obliga a decidir con información incompleta, asumir riesgos, diversificar o concentrar, creer en una convicción cuando los números no la favorecen.
           </p>
           <p style={{ marginTop: 16, fontSize: 15, color: C.text, lineHeight: 1.7 }}>
             Exactamente lo que haces como founder, todos los días.
@@ -484,7 +484,7 @@ function FinalCTA({ onStart }) {
           Inscripciones cierran cuando empieza el primer partido. Después solo se puede mirar.
         </p>
         <button onClick={onStart} style={btnPrimary}>
-          <span>ENTRAR A LA POLLA</span>
+          <span>ENTRAR AL MUNDIAL</span>
           <span style={{ fontSize: 16 }}>→</span>
         </button>
       </div>
@@ -838,7 +838,7 @@ function Submitting({ user, bets, onDone }) {
       const maxBet = Math.max(...Object.values(bets).map(b => b?.amount || 0));
       const concentration = Math.round((maxBet / invested) * 100);
 
-      const userMsg = `Acabo de hacer mis apuestas en la Polla del CEO. Soy ${user.name}, fundador/a de ${user.company}, etapa: ${user.stage}${user.revenue ? `, facturación: ${user.revenue}` : ""}.
+      const userMsg = `Acabo de hacer mis apuestas en la MUNDIAL DEL CEO. Soy ${user.name}, fundador/a de ${user.company}, etapa: ${user.stage}${user.revenue ? `, facturación: ${user.revenue}` : ""}.
 
 Mis apuestas:
 ${betsList}
@@ -1222,7 +1222,7 @@ function Footer() {
             3<span style={{ color: C.lime }}>0X</span>
           </span>
           <span style={{ fontFamily: F.cond, fontSize: 11, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            POLLA DEL CEO · Propuesta de Daniel para Andrés Bilbao
+            MUNDIAL DEL CEO · Propuesta de Daniel para Andrés Bilbao
           </span>
         </div>
         <div style={{ fontFamily: F.cond, fontSize: 11, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
