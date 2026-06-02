@@ -1,10 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 
 /* ════════════════════════════════════════════════════════
    MUNDIAL DEL CEO · 30X · MUNDIAL 2026
    Rediseño con estética broadcast deportivo
    Una propuesta de Daniel para Andrés Bilbao
 ═══════════════════════════════════════════════════════ */
+
+/* ─── RESPONSIVE HOOK ──────────────────────────────────── */
+function useScreen() {
+  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+  useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return { mobile: w < 768, tablet: w < 1024, w };
+}
+const ScreenCtx = createContext({ mobile: false, tablet: false, w: 1200 });
+function useR() { return useContext(ScreenCtx); }
 
 /* ─── DESIGN TOKENS — Mundial Edition ───────────────────── */
 const C = {
@@ -72,7 +85,7 @@ const SEED_BOARD = [
   { name: "Laura C.",   company: "AgroLink",       stage: "MVP",       score: 175300, risk: "Alto",  div: 7 },
 ];
 
-const SYSTEM_FEEDBACK = `Eres Andrés Bilbao — cofundador de Rappi, CEO de 30X, caleño. Acabas de revisar las apuestas que un founder hizo en la MUNDIAL DEL CEO de 30X.
+const SYSTEM_FEEDBACK = `Eres Andrés Bilbao — cofundador de Rappi, CEO de 30X, caleño. Acabas de revisar las apuestas que un founder hizo en la Mundial del CEO de 30X.
 
 Tu trabajo es darle feedback en TU VOZ:
 - Caleño natural: usa "venga", "parce", "de una", "bacano", "eso sí", "le metió" con moderación — una o dos expresiones, que suene natural
@@ -114,6 +127,7 @@ function submitToBoard(entry) {
    APP ROOT
 ═══════════════════════════════════════════════════════ */
 export default function App() {
+  const screen = useScreen();
   const [view, setView] = useState("intro");
   const [user, setUser] = useState(null);
   const [bets, setBets] = useState({});
@@ -124,10 +138,11 @@ export default function App() {
   useEffect(() => { setBoard(loadBoard()); }, []);
 
   return (
+    <ScreenCtx.Provider value={screen}>
     <div style={{
       minHeight: "100vh",
       background: `radial-gradient(ellipse at top, ${C.surface} 0%, ${C.bg} 50%, ${C.bgDeep} 100%)`,
-      color: C.white, fontFamily: F.body,
+      color: C.white, fontFamily: F.body, overflowX: "hidden",
     }}>
       <StadiumPattern />
       <TopBar view={view} />
@@ -150,6 +165,7 @@ export default function App() {
       <Footer />
       <GlobalStyles />
     </div>
+    </ScreenCtx.Provider>
   );
 }
 
@@ -179,6 +195,7 @@ function StadiumPattern() {
    TOPBAR
 ═══════════════════════════════════════════════════════ */
 function TopBar({ view }) {
+  const { mobile } = useR();
   const map = { intro: "INICIO", lead: "REGISTRO", game: "APUESTAS", submitting: "ANÁLISIS", feedback: "ANÁLISIS", board: "RANKING" };
   return (
     <div style={{
@@ -186,20 +203,22 @@ function TopBar({ view }) {
       background: "rgba(10,20,25,0.92)",
       backdropFilter: "blur(20px)",
       borderBottom: `1px solid ${C.border}`,
-      padding: "0 24px", height: 64,
+      padding: mobile ? "0 14px" : "0 24px", height: mobile ? 52 : 64,
       display: "flex", justifyContent: "space-between", alignItems: "center",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-        <span style={{ fontFamily: F.display, fontSize: 26, letterSpacing: "0.02em" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: mobile ? 10 : 18 }}>
+        <span style={{ fontFamily: F.display, fontSize: mobile ? 22 : 26, letterSpacing: "0.02em" }}>
           3<span style={{ color: C.lime }}>0X</span>
         </span>
-        <div style={{ width: 1, height: 24, background: C.border }} />
-        <div>
-          <div style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: C.lime, textTransform: "uppercase" }}>FIFA World Cup 2026</div>
-          <div style={{ fontFamily: F.cond, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", color: C.mid }}>MUNDIAL DEL CEO · BETA</div>
-        </div>
+        {!mobile && <>
+          <div style={{ width: 1, height: 24, background: C.border }} />
+          <div>
+            <div style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: C.lime, textTransform: "uppercase" }}>FIFA World Cup 2026</div>
+            <div style={{ fontFamily: F.cond, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", color: C.mid }}>MUNDIAL DEL CEO · BETA</div>
+          </div>
+        </>}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: mobile ? 8 : 14 }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 8,
           background: C.limeFaint, border: `1px solid rgba(200,241,53,0.2)`,
@@ -208,9 +227,9 @@ function TopBar({ view }) {
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.lime, boxShadow: `0 0 10px ${C.lime}`, animation: "pulse 2s ease-in-out infinite" }} />
           <span style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", color: C.lime }}>LIVE</span>
         </div>
-        <span style={{ fontFamily: F.cond, fontSize: 11, letterSpacing: "0.12em", color: C.mid, textTransform: "uppercase" }}>
+        {!mobile && <span style={{ fontFamily: F.cond, fontSize: 11, letterSpacing: "0.12em", color: C.mid, textTransform: "uppercase" }}>
           {map[view] || "..."}
-        </span>
+        </span>}
       </div>
     </div>
   );
@@ -220,10 +239,12 @@ function TopBar({ view }) {
    VIEW · INTRO
 ═══════════════════════════════════════════════════════ */
 function Intro({ onStart }) {
+  const { mobile, tablet } = useR();
+  const px = mobile ? "16px" : "24px";
   return (
-    <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 24px 80px" }}>
+    <div style={{ maxWidth: 1240, margin: "0 auto", padding: `0 ${px} 80px` }}>
       {/* HERO */}
-      <div style={{ position: "relative", padding: "80px 0 60px", overflow: "hidden" }}>
+      <div style={{ position: "relative", padding: mobile ? "40px 0 30px" : "80px 0 60px", overflow: "hidden" }}>
         {/* Trofeo geométrico */}
         <Trophy />
 
@@ -242,7 +263,7 @@ function Intro({ onStart }) {
 
           {/* Headline atlética */}
           <h1 style={{
-            fontFamily: F.display, fontSize: 132, lineHeight: 0.86,
+            fontFamily: F.display, fontSize: mobile ? 48 : tablet ? 80 : 132, lineHeight: 0.86,
             letterSpacing: "0.005em", color: C.white, margin: 0,
           }}>
             APUESTA<br />
@@ -252,14 +273,14 @@ function Intro({ onStart }) {
 
           {/* Subtítulo */}
           <p style={{
-            marginTop: 36, fontSize: 18, fontWeight: 300, color: C.text,
+            marginTop: mobile ? 20 : 36, fontSize: mobile ? 14 : 18, fontWeight: 300, color: C.text,
             maxWidth: 560, lineHeight: 1.65,
           }}>
             $100.000 USD simulados. 8 partidos clave. Un test brutal de cómo asignas capital, gestionas riesgo y decides bajo presión — disfrazado del Mundial 2026.
           </p>
 
           {/* CTA */}
-          <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 44, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: mobile ? 28 : 44, flexWrap: "wrap" }}>
             <button onClick={onStart} style={btnPrimary}>
               <span>EMPEZAR A APOSTAR</span>
               <span style={{ fontSize: 16 }}>→</span>
@@ -280,7 +301,7 @@ function Intro({ onStart }) {
       {/* SECCIÓN COMO FUNCIONA */}
       <div style={{ marginTop: 100 }}>
         <SectionHeader n="01" label="EL JUEGO" title="Las reglas son simples" />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 40 }}>
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : tablet ? "1fr 1fr" : "repeat(4, 1fr)", gap: 16, marginTop: 40 }}>
           {[
             { n: "01", t: "Recibes $100K USD", d: "Capital simulado. Lo administras como mejor te parezca." },
             { n: "02", t: "Apuestas a 8 partidos", d: "Eliges ganador y cuánto capital metes. $1K min, $50K max." },
@@ -293,11 +314,11 @@ function Intro({ onStart }) {
       </div>
 
       {/* SECCIÓN FILOSOFÍA */}
-      <div style={{ marginTop: 100, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+      <div style={{ marginTop: mobile ? 60 : 100, display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: mobile ? 28 : 48, alignItems: "center" }}>
         <div>
           <SectionHeader n="02" label="LA TESIS" />
           <h3 style={{
-            fontFamily: F.display, fontSize: 56, lineHeight: 0.95,
+            fontFamily: F.display, fontSize: mobile ? 28 : 56, lineHeight: 0.95,
             color: C.white, marginTop: 16, letterSpacing: "0.005em",
           }}>
             SI NO SABES APOSTAR A 8 PARTIDOS — <span style={{ color: C.lime }}>¿CÓMO VAS A TOMAR 1.000 DECISIONES EN TU EMPRESA?</span>
@@ -360,13 +381,14 @@ function ClockIcon() {
 }
 
 function FlagStrip() {
+  const { mobile } = useR();
   const flags = ["🇦🇷", "🇧🇷", "🇲🇽", "🇪🇸", "🇫🇷", "🇩🇪", "🇵🇹", "🇮🇹", "🇺🇸", "🇨🇴", "🇺🇾", "🇳🇱"];
   return (
     <div style={{ position: "relative", marginTop: 80, paddingTop: 28, borderTop: `1px solid ${C.border}` }}>
       <div style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 600, letterSpacing: "0.22em", color: C.mid, textTransform: "uppercase", marginBottom: 16 }}>
         SELECCIONES EN JUEGO
       </div>
-      <div style={{ display: "flex", gap: 18, fontSize: 36, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: mobile ? 10 : 18, fontSize: mobile ? 28 : 36, flexWrap: "wrap" }}>
         {flags.map((f, i) => (
           <span key={i} style={{
             filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.5))",
@@ -381,6 +403,7 @@ function FlagStrip() {
 }
 
 function Scoreboard() {
+  const { mobile } = useR();
   const stats = [
     { v: "$100K", l: "Capital simulado", c: C.lime },
     { v: "8",     l: "Partidos clave",    c: C.white },
@@ -396,14 +419,14 @@ function Scoreboard() {
         background: `linear-gradient(90deg, ${C.red}, ${C.gold}, ${C.lime}, ${C.mint})`,
         height: 3,
       }} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: mobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)" }}>
         {stats.map((s, i) => (
           <div key={i} style={{
             padding: "28px 24px",
             borderLeft: i > 0 ? `1px solid ${C.border}` : "none",
             textAlign: "center",
           }}>
-            <div style={{ fontFamily: F.display, fontSize: 48, color: s.c, lineHeight: 1, letterSpacing: "0.01em" }}>{s.v}</div>
+            <div style={{ fontFamily: F.display, fontSize: mobile ? 32 : 48, color: s.c, lineHeight: 1, letterSpacing: "0.01em" }}>{s.v}</div>
             <div style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 600, letterSpacing: "0.18em", color: C.mid, marginTop: 8, textTransform: "uppercase" }}>{s.l}</div>
           </div>
         ))}
@@ -429,6 +452,7 @@ function MatchDayCard({ n, t, d }) {
 }
 
 function QuoteCard() {
+  const { mobile } = useR();
   return (
     <div style={{
       background: `linear-gradient(135deg, ${C.surface} 0%, ${C.surfaceMid} 100%)`,
@@ -459,6 +483,7 @@ function QuoteCard() {
 }
 
 function FinalCTA({ onStart }) {
+  const { mobile } = useR();
   return (
     <div style={{
       marginTop: 100, padding: "72px 32px", textAlign: "center", position: "relative",
@@ -476,7 +501,7 @@ function FinalCTA({ onStart }) {
         <div style={{ fontFamily: F.cond, fontSize: 12, fontWeight: 700, letterSpacing: "0.22em", color: C.lime, marginBottom: 16, textTransform: "uppercase" }}>
           ▼ INSCRIPCIONES ABIERTAS ▼
         </div>
-        <h3 style={{ fontFamily: F.display, fontSize: 64, color: C.white, marginBottom: 16, letterSpacing: "0.005em", lineHeight: 0.95 }}>
+        <h3 style={{ fontFamily: F.display, fontSize: mobile ? 32 : 64, color: C.white, marginBottom: 16, letterSpacing: "0.005em", lineHeight: 0.95 }}>
           EL MUNDIAL EMPIEZA EN<br />
           <span style={{ color: C.lime }}>10 DÍAS.</span> ¿VAS A JUGAR?
         </h3>
@@ -496,14 +521,15 @@ function FinalCTA({ onStart }) {
    VIEW · LEAD CAPTURE
 ═══════════════════════════════════════════════════════ */
 function Lead({ onSubmit }) {
+  const { mobile } = useR();
   const [form, setForm] = useState({ name: "", email: "", company: "", stage: "", revenue: "" });
   const valid = form.name && form.email && form.company && form.stage;
 
   return (
-    <div style={{ maxWidth: 560, margin: "0 auto", padding: "60px 24px" }}>
+    <div style={{ maxWidth: 560, margin: "0 auto", padding: mobile ? "40px 16px" : "60px 24px" }}>
       <ProgressBar step={1} />
 
-      <h2 style={{ fontFamily: F.display, fontSize: 60, lineHeight: 0.95, color: C.white, marginTop: 28, marginBottom: 14, letterSpacing: "0.005em" }}>
+      <h2 style={{ fontFamily: F.display, fontSize: mobile ? 36 : 60, lineHeight: 0.95, color: C.white, marginTop: 28, marginBottom: 14, letterSpacing: "0.005em" }}>
         ANTES DE DARTE<br />TU CAPITAL
       </h2>
       <p style={{ fontSize: 15, color: C.text, marginBottom: 36, lineHeight: 1.65 }}>
@@ -591,6 +617,7 @@ function Select({ label, v, onChange, options }) {
    VIEW · GAME BOARD
 ═══════════════════════════════════════════════════════ */
 function Game({ user, bets, setBets, onSubmit }) {
+  const { mobile, tablet } = useR();
   const invested = Object.values(bets).reduce((s, b) => s + (b?.amount || 0), 0);
   const remaining = STARTING_CAPITAL - invested;
   const betsCount = Object.values(bets).filter(b => b?.pick && b?.amount > 0).length;
@@ -606,11 +633,11 @@ function Game({ user, bets, setBets, onSubmit }) {
   }
 
   return (
-    <div style={{ maxWidth: 1240, margin: "0 auto", padding: "32px 24px 100px" }}>
+    <div style={{ maxWidth: 1240, margin: "0 auto", padding: mobile ? "24px 16px 80px" : "32px 24px 100px" }}>
       <ProgressBar step={2} />
 
       <div style={{ marginTop: 24, marginBottom: 24 }}>
-        <h2 style={{ fontFamily: F.display, fontSize: 52, lineHeight: 0.95, color: C.white, letterSpacing: "0.005em" }}>
+        <h2 style={{ fontFamily: F.display, fontSize: mobile ? 32 : 52, lineHeight: 0.95, color: C.white, letterSpacing: "0.005em" }}>
           BIENVENIDO, <span style={{ color: C.lime }}>{user?.name?.split(" ")[0]?.toUpperCase()}</span>
         </h2>
         <p style={{ fontSize: 14, color: C.mid, marginTop: 8 }}>
@@ -627,7 +654,7 @@ function Game({ user, bets, setBets, onSubmit }) {
         boxShadow: `0 8px 32px rgba(0,0,0,0.4)`,
       }}>
         <div style={{ height: 2, background: `linear-gradient(90deg, ${C.red}, ${C.gold}, ${C.lime})`, marginTop: -20, marginLeft: -24, marginRight: -24, marginBottom: 16 }} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 24, alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr auto", gap: mobile ? 16 : 24, alignItems: "center" }}>
           <Stat label="CAPITAL" value={`$${STARTING_CAPITAL.toLocaleString()}`} color={C.mid} />
           <Stat label="INVERTIDO" value={`$${invested.toLocaleString()}`} color={C.white} />
           <Stat label="DISPONIBLE" value={`$${remaining.toLocaleString()}`} color={remaining > 0 ? C.lime : C.red} />
@@ -647,7 +674,7 @@ function Game({ user, bets, setBets, onSubmit }) {
       </div>
 
       {/* MATCHES GRID */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "repeat(2, 1fr)", gap: 16 }}>
         {MATCHES.map(m => (
           <MatchCard
             key={m.id} match={m}
@@ -822,6 +849,7 @@ function Stat({ label, value, color, sub }) {
    SUBMITTING + FEEDBACK
 ═══════════════════════════════════════════════════════ */
 function Submitting({ user, bets, onDone }) {
+  const { mobile } = useR();
   useEffect(() => {
     (async () => {
       const betsList = Object.entries(bets)
@@ -838,7 +866,7 @@ function Submitting({ user, bets, onDone }) {
       const maxBet = Math.max(...Object.values(bets).map(b => b?.amount || 0));
       const concentration = Math.round((maxBet / invested) * 100);
 
-      const userMsg = `Acabo de hacer mis apuestas en la MUNDIAL DEL CEO. Soy ${user.name}, fundador/a de ${user.company}, etapa: ${user.stage}${user.revenue ? `, facturación: ${user.revenue}` : ""}.
+      const userMsg = `Acabo de hacer mis apuestas en la Mundial del CEO. Soy ${user.name}, fundador/a de ${user.company}, etapa: ${user.stage}${user.revenue ? `, facturación: ${user.revenue}` : ""}.
 
 Mis apuestas:
 ${betsList}
@@ -871,7 +899,7 @@ Resumen:
   }, []);
 
   return (
-    <div style={{ padding: "120px 24px", textAlign: "center", maxWidth: 540, margin: "0 auto" }}>
+    <div style={{ padding: mobile ? "80px 16px" : "120px 24px", textAlign: "center", maxWidth: 540, margin: "0 auto" }}>
       <div style={{ position: "relative", display: "inline-block", marginBottom: 32 }}>
         <AvatarAB size={96} />
         <div style={{
@@ -880,7 +908,7 @@ Resumen:
           animation: "ping 1.5s ease-in-out infinite",
         }} />
       </div>
-      <h3 style={{ fontFamily: F.display, fontSize: 40, color: C.white, marginBottom: 14, letterSpacing: "0.005em", lineHeight: 0.95 }}>
+      <h3 style={{ fontFamily: F.display, fontSize: mobile ? 28 : 40, color: C.white, marginBottom: 14, letterSpacing: "0.005em", lineHeight: 0.95 }}>
         ANDRÉS ESTÁ REVISANDO<br />TU PORTAFOLIO...
       </h3>
       <p style={{ fontSize: 14, color: C.mid, lineHeight: 1.7 }}>
@@ -914,11 +942,12 @@ function calcScore(bets) {
 }
 
 function Feedback({ user, bets, feedback, score, onContinue }) {
+  const { mobile } = useR();
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "48px 24px 80px" }}>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: mobile ? "32px 16px 60px" : "48px 24px 80px" }}>
       <ProgressBar step={3} />
 
-      <h2 style={{ fontFamily: F.display, fontSize: 60, lineHeight: 0.95, color: C.white, marginTop: 24, marginBottom: 36, letterSpacing: "0.005em" }}>
+      <h2 style={{ fontFamily: F.display, fontSize: mobile ? 32 : 60, lineHeight: 0.95, color: C.white, marginTop: 24, marginBottom: 36, letterSpacing: "0.005em" }}>
         LO QUE TU PORTAFOLIO<br />DICE DE TI
       </h2>
 
@@ -954,7 +983,7 @@ function Feedback({ user, bets, feedback, score, onContinue }) {
         <div style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: C.lime, marginBottom: 14, textTransform: "uppercase" }}>
           ▼ MÉTRICAS DE TU ESTRATEGIA
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2, background: C.border }}>
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 2, background: C.border }}>
           <ScoreCard label="SCORE" value={`$${score?.value?.toLocaleString() || 0}`} sub="Retorno ajustado" highlight color={C.lime} />
           <ScoreCard label="RIESGO" value={score?.risk || "—"} sub={`Odds prom. ${score?.avgOdds}x`} color={score?.risk === "Alto" ? C.red : score?.risk === "Medio" ? C.gold : C.mint} />
           <ScoreCard label="DIVERSIF." value={`${score?.diversification || 0}/8`} sub="Partidos" color={C.white} />
@@ -970,7 +999,7 @@ function Feedback({ user, bets, feedback, score, onContinue }) {
           const winner = b.pick === "home" ? m.home : b.pick === "away" ? m.away : { n: "Empate", f: "🤝" };
           return (
             <div key={id} style={{
-              display: "grid", gridTemplateColumns: "auto 1fr auto auto auto",
+              display: "grid", gridTemplateColumns: mobile ? "auto 1fr auto" : "auto 1fr auto auto auto",
               gap: 14, alignItems: "center", padding: "10px 0",
               borderBottom: `1px solid ${C.border}`,
             }}>
@@ -1013,6 +1042,7 @@ function ScoreCard({ label, value, sub, highlight, color }) {
    VIEW · LEADERBOARD
 ═══════════════════════════════════════════════════════ */
 function Board({ board, user, score }) {
+  const { mobile } = useR();
   const userEntry = {
     name: user.name.split(" ")[0] + " (Tú)",
     company: user.company, stage: user.stage,
@@ -1022,7 +1052,7 @@ function Board({ board, user, score }) {
   const userRank = fullBoard.findIndex(e => e.isUser) + 1;
 
   return (
-    <div style={{ maxWidth: 1040, margin: "0 auto", padding: "48px 24px 80px" }}>
+    <div style={{ maxWidth: 1040, margin: "0 auto", padding: mobile ? "32px 16px 60px" : "48px 24px 80px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
         <FlagDot color={C.gold} />
         <span style={{ fontFamily: F.cond, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", color: C.gold, textTransform: "uppercase" }}>
@@ -1030,7 +1060,7 @@ function Board({ board, user, score }) {
         </span>
       </div>
 
-      <h2 style={{ fontFamily: F.display, fontSize: 64, lineHeight: 0.92, color: C.white, marginBottom: 8, letterSpacing: "0.005em" }}>
+      <h2 style={{ fontFamily: F.display, fontSize: mobile ? 36 : 64, lineHeight: 0.92, color: C.white, marginBottom: 8, letterSpacing: "0.005em" }}>
         QUEDASTE #{userRank} <span style={{ color: C.lime }}>DE {fullBoard.length}</span>
       </h2>
       <p style={{ fontSize: 14, color: C.text, marginBottom: 32, lineHeight: 1.65 }}>
@@ -1043,8 +1073,8 @@ function Board({ board, user, score }) {
 
         {/* Header */}
         <div style={{
-          display: "grid", gridTemplateColumns: "60px 1fr 1.2fr 100px 100px 1fr",
-          gap: 14, padding: "12px 20px", background: C.surfaceHi,
+          display: "grid", gridTemplateColumns: mobile ? "40px 1fr 1fr" : "60px 1fr 1.2fr 100px 100px 1fr",
+          gap: mobile ? 10 : 14, padding: mobile ? "10px 14px" : "12px 20px", background: C.surfaceHi,
           fontFamily: F.cond, fontSize: 10, letterSpacing: "0.18em",
           textTransform: "uppercase", color: C.mid, fontWeight: 700,
           borderBottom: `1px solid ${C.border}`,
@@ -1060,8 +1090,8 @@ function Board({ board, user, score }) {
         {/* Rows */}
         {fullBoard.map((e, i) => (
           <div key={i} style={{
-            display: "grid", gridTemplateColumns: "60px 1fr 1.2fr 100px 100px 1fr",
-            gap: 14, padding: "14px 20px",
+            display: "grid", gridTemplateColumns: mobile ? "40px 1fr 1fr" : "60px 1fr 1.2fr 100px 100px 1fr",
+            gap: mobile ? 10 : 14, padding: mobile ? "10px 14px" : "14px 20px",
             borderBottom: i < fullBoard.length - 1 ? `1px solid ${C.border}` : "none",
             background: e.isUser ? C.limeFaint : "transparent",
             alignItems: "center",
@@ -1115,7 +1145,7 @@ function Board({ board, user, score }) {
           lineHeight: 1, pointerEvents: "none",
         }}>30X</div>
         <div style={{ position: "relative", zIndex: 1 }}>
-          <h3 style={{ fontFamily: F.display, fontSize: 48, color: C.white, marginBottom: 14, letterSpacing: "0.005em", lineHeight: 0.95 }}>
+          <h3 style={{ fontFamily: F.display, fontSize: mobile ? 28 : 48, color: C.white, marginBottom: 14, letterSpacing: "0.005em", lineHeight: 0.95 }}>
             ¿NO QUIERES ESPERAR<br />AL FINAL DEL MUNDIAL?
           </h3>
           <p style={{ fontSize: 14, color: C.text, lineHeight: 1.7, marginBottom: 28, maxWidth: 460, margin: "0 auto 28px" }}>
@@ -1211,6 +1241,7 @@ const fieldInput = {
 
 /* ────── FOOTER ──────────────────────────────────────────── */
 function Footer() {
+  const { mobile } = useR();
   return (
     <div style={{
       padding: "32px 24px", borderTop: `1px solid ${C.border}`,
